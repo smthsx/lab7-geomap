@@ -1,13 +1,38 @@
-
 // Lab 7: Geomaps
-// Activity 1 - Step 1.2: Create the US Map
+// Activity 2 - Step 2.1: Download and Prepare Data
 
-d3.json("./topo.json").then((data) => {
+Promise.all([
+  d3.json("./topo.json"),
+  d3.csv("./cities.csv"),
+  d3.csv("./states.csv")
+]).then((data) => {
+
+  // Extract the datasets
+  const topology = data[0];
+  const cities = data[1];
+  const states = data[2];
 
   // Convert TopoJSON into GeoJSON
-  const topo = topojson.feature(data, data.objects.states);
+  const topo = topojson.feature(
+    topology,
+    topology.objects.states
+  );
 
-  console.log("Converted GeoJSON:", topo);
+  // Create a dictionary of state populations
+  const stateDictionary = new Map();
+
+  states.forEach((state) => {
+    stateDictionary.set(
+      state.State,
+      +String(state["2018 Population"]).replace(/,/g, "")
+    );
+  });
+
+  // Display the loaded data
+  console.log("GeoJSON:", topo);
+  console.log("Cities:", cities);
+  console.log("States:", states);
+  console.log("State Population Dictionary:", stateDictionary);
 
   // Create the Albers USA projection
   var projection = d3.geoAlbersUsa()
@@ -32,4 +57,6 @@ d3.json("./topo.json").then((data) => {
     .attr("stroke", "black")
     .attr("stroke-width", "1px");
 
+}).catch((error) => {
+  console.error("Error loading data:", error);
 });
