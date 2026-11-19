@@ -1,5 +1,6 @@
+
 // Lab 7: Geomaps
-// Activity 2 - Step 2.1: Download and Prepare Data
+// Activity 2 - Step 2.2: Color States by Population
 
 Promise.all([
   d3.json("./topo.json"),
@@ -7,7 +8,7 @@ Promise.all([
   d3.csv("./states.csv")
 ]).then((data) => {
 
-  // Extract the datasets
+  // Extract the three datasets
   const topology = data[0];
   const cities = data[1];
   const states = data[2];
@@ -34,6 +35,19 @@ Promise.all([
   console.log("States:", states);
   console.log("State Population Dictionary:", stateDictionary);
 
+  // Get the minimum and maximum populations
+  const populationExtent = d3.extent(
+    Array.from(stateDictionary.values())
+      .filter(Number.isFinite)
+  );
+
+  console.log("Population Extent:", populationExtent);
+
+  // Create the sequential blue color scale
+  var blues = d3.scaleSequential()
+    .domain(populationExtent)
+    .range(["white", "steelblue"]);
+
   // Create the Albers USA projection
   var projection = d3.geoAlbersUsa()
     .scale(700)
@@ -47,13 +61,21 @@ Promise.all([
     .append("g")
     .attr("transform", "translate(50,50)");
 
-  // Draw the US states
+  // Draw and color the US states
   svg.append("g")
     .selectAll("path")
     .data(topo.features)
     .join("path")
     .attr("d", path)
-    .attr("fill", "whitesmoke")
+    .attr("fill", (d) => {
+      const population = stateDictionary.get(
+        d.properties.name
+      );
+
+      return Number.isFinite(population)
+        ? blues(population)
+        : "whitesmoke";
+    })
     .attr("stroke", "black")
     .attr("stroke-width", "1px");
 
